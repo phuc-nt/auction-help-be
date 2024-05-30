@@ -1,6 +1,8 @@
-# Trợ lý Techbase Vietnam
+# Backend của ứng dụng Chat bot hỗ trợ dịch vụ Auction Help
 
-Dự án này là một ứng dụng Flask phục vụ như một trợ lý để trả lời các câu hỏi về Techbase Vietnam. Nó sử dụng mô hình GPT của OpenAI và Qdrant để tìm kiếm các câu tương tự.
+Dự án này là một ứng dụng Flask phục vụ như một chat bot để hỗ trợ dịch vụ Auction Help. Nó sử dụng mô hình GPT của OpenAI và Qdrant để tìm kiếm các câu tương tự.
+
+![Sequence Diagram](sequence.png)
 
 ## Cài đặt
 
@@ -30,6 +32,32 @@ Máy chủ sẽ khởi động tại `http://0.0.0.0:8080`.
 
 - `GET /`: Trả về trang chủ.
 - `POST /api/chat`: Nhận một payload JSON với `query` và `context`, và trả về một phản hồi từ mô hình GPT.
+
+Payload JSON gồm:
+
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": "Who won the world series?"
+    }
+  ]
+}
+```
+
+Phản hồi JSON gồm:
+
+```json
+{
+  "role": "assistant",
+  "content": "The Los Angeles Dodgers won the World Series in 2020."
+}
+```
 
 ## Biến môi trường
 

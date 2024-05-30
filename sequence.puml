@@ -1,0 +1,26 @@
+@startuml
+actor User
+participant FlaskApp as App
+participant OpenAI as OpenAI
+participant Qdrant as Qdrant
+
+User -> App: POST /api/chat
+activate App
+App -> App: Extract messages from request
+App -> OpenAI: Get embedding of last user message
+activate OpenAI
+OpenAI --> App: Return embedding
+deactivate OpenAI
+App -> Qdrant: Search similar sentences
+activate Qdrant
+Qdrant --> App: Return search results
+deactivate Qdrant
+App -> App: Format search results for context
+App -> OpenAI: Generate response with context
+activate OpenAI
+OpenAI --> App: Return bot response
+deactivate OpenAI
+App -> App: Convert Markdown to HTML
+App --> User: Return HTML response
+deactivate App
+@enduml
