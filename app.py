@@ -18,7 +18,7 @@ client_qdrant = QdrantClient(
     url="https://5d9b085c-df8b-4f83-81f2-82d006da134a.us-east4-0.gcp.cloud.qdrant.io:6333",
     api_key=qdrant_api_key
 )
-collection_name = 'tbv_facebook_post_400_and_homepage_200'
+collection_name = 'auction_help_1_text-embedding-3-large'
 
 # Initialize OpenAI client
 client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
@@ -46,20 +46,16 @@ def format_response(query, results):
     response = f"Truy vấn: {query}\n"
     for i, result in enumerate(results, start=1):
         snippet = result.payload['text']
-        post_url = result.payload['post_url']
-        posted_on = result.payload['posted_on']
-        post_id = result.payload['post_id']
-        response += f"\nKết quả {i}: {snippet}\nURL: {post_url}\nĐăng ngày: {posted_on}\nID: {post_id}\n"
+        url = result.payload['url']
+        title = result.payload['title']
+        response += f"\nKết quả {i}: {snippet}\nURL: {url}\nTitle: {title}\n"
     return response
 
 def ask_gpt(query, context):
-    """
-    Hàm này sử dụng GPT để sinh câu trả lời dựa trên prompt bao gồm context và truy vấn.
-    """
     completion = client.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "Bạn là trợ lý chuyên trả lời các câu hỏi về công ty Techbase Vietnam, khi người dùng hỏi, bạn sẽ trả lời theo thông tin ngữ cảnh sau, và cung cấp các đường link để tham khảo thêm lấy từ ngữ cảnh. Ngữ cảnh: " + context},
+            {"role": "system", "content": "Bạn là trợ lý đa ngôn ngữ về dịch vụ Yahoo!オークション, bạn chuyên trả lời các câu hỏi về cách sử dụng dịch vụ, dựa trên nội dung câu hỏi và ngữ cảnh. Bạn sẽ đưa ra câu trả lời tổng hợp ngắn gọn, và dẫn các link của bài viết chi tiết để người dùng tìm hiểu thêm. Ngữ cảnh: " + context},
             {"role": "user", "content": query}
         ]
     )
@@ -89,7 +85,7 @@ def chat():
     # Convert Markdown to HTML
     html_response = markdown.markdown(bot_response)
     
-    print(html_response)
+    # print(html_response)
 
     return html_response
 
