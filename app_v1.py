@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
@@ -57,10 +57,9 @@ def ask_gpt(query, context):
         messages=[
             {"role": "system", "content": "Bạn là trợ lý đa ngôn ngữ về dịch vụ Yahoo!オークション, bạn chuyên trả lời các câu hỏi về cách sử dụng dịch vụ, dựa trên nội dung câu hỏi và ngữ cảnh. Bạn sẽ đưa ra câu trả lời tổng hợp ngắn gọn, và dẫn các link của bài viết chi tiết để người dùng tìm hiểu thêm. Ngữ cảnh: " + context},
             {"role": "user", "content": query}
-        ],
-        stream=True
+        ]
     )
-    return completion
+    return completion.choices[0].message.content
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -83,15 +82,12 @@ def chat():
     # Use OpenAI to generate a response
     bot_response = ask_gpt(user_message, formatted_context)
     
-    def generate():
-        for chunk in bot_response:
-            # Get content from delta
-            content = chunk.choices[0].delta.content
-            # Check if content is not None before encoding
-            if content is not None:
-                yield content.encode('utf-8')
+    # Convert Markdown to HTML
+    html_response = markdown.markdown(bot_response)
+    
+    # print(html_response)
 
-    return Response(generate(), mimetype='text/html')
+    return html_response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
