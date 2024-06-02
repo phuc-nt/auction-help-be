@@ -4,8 +4,6 @@ from dotenv import load_dotenv
 import os
 import openai
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, VectorParams
-import markdown
 
 # Load environment variables from .env file
 load_dotenv()
