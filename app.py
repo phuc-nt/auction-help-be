@@ -10,18 +10,28 @@ import markdown
 # Load environment variables from .env file
 load_dotenv()
 
-# Get Qdrant API key from environment
-qdrant_api_key = os.getenv('QDRANT_API_KEY')
+# Define constants
+QDRANT_DOMAIN = "https://5d9b085c-df8b-4f83-81f2-82d006da134a.us-east4-0.gcp.cloud.qdrant.io"
+# QDRANT_DOMAIN = "http://localhost"
+QDRANT_PORT = 6333
+QDRANT_URL = f"{QDRANT_DOMAIN}:{QDRANT_PORT}"
+COLLECTION_NAME = 'auction_help_1_text-embedding-3-large'
+MODEL_NAME = "text-embedding-3-large"
+GPT_MODEL_NAME = "gpt-4o"
+SYSTEM_MESSAGE_FILE = 'messages/system_message.txt'
+
+# Get API keys from environments
+QDRANT_API_KEY = os.getenv('QDRANT_API_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Initialize Qdrant client
 client_qdrant = QdrantClient(
-    url="https://5d9b085c-df8b-4f83-81f2-82d006da134a.us-east4-0.gcp.cloud.qdrant.io:6333",
-    api_key=qdrant_api_key
+    url=QDRANT_URL,
+    api_key=QDRANT_API_KEY
 )
-collection_name = 'auction_help_1_text-embedding-3-large'
 
 # Initialize OpenAI client
-client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+client_openai = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 app = Flask(__name__)
 CORS(app)
@@ -32,12 +42,12 @@ def home():
 
 def get_embedding(text, model):
     text = str(text).replace("\n", " ")  # Loại bỏ xuống dòng
-    response = client.embeddings.create(input=[text], model=model)
+    response = client_openai.embeddings.create(input=[text], model=model)
     return response.data[0].embedding, response.usage.total_tokens
 
 def search_similar_sentences(query_embedding):
     return client_qdrant.search(
-        collection_name=collection_name,
+        collection_name=COLLECTION_NAME,
         query_vector=query_embedding,
         limit=3  # Lấy 3 kết quả hàng đầu
     )
@@ -51,11 +61,16 @@ def format_response(query, results):
         response += f"\nKết quả {i}: {snippet}\nURL: {url}\nTitle: {title}\n"
     return response
 
+def get_system_message():
+    with open(SYSTEM_MESSAGE_FILE, 'r') as file:
+        return file.read()
+
 def ask_gpt(query, context):
-    completion = client.chat.completions.create(
+    system_message = get_system_message()
+    completion = client_openai.chat.completions.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "Bạn là trợ lý đa ngôn ngữ về dịch vụ Yahoo!オークション, bạn chuyên trả lời các câu hỏi về cách sử dụng dịch vụ, dựa trên nội dung câu hỏi và ngữ cảnh. Bạn sẽ đưa ra câu trả lời tổng hợp ngắn gọn, và dẫn các link của bài viết chi tiết để người dùng tìm hiểu thêm. Ngữ cảnh: " + context},
+            {"role": "system", "content": system_message + context},
             {"role": "user", "content": query}
         ],
         stream=True
